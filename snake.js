@@ -204,3 +204,24 @@ var draw = function()
         drawScene2();
     }
 };
+var snake = function(x,y,snakeWidth, speed, score) {
+    this.x = x;
+    this.y = y;
+    this.snakeWidth=snakeWidth;
+    this.speed=speed;
+    this.score=score;
+  };
+
+
+if (scene===2){
+draw = function() {
+     background (255,255,255);
+     text("Score: " + numTries, 300,18);
+     image(getImage("avatars/primosaur-sapling", mouseX,mouseY,width,30);
+};
+
+
+if (score===10) {
+    speed++;
+    width++;
+}
