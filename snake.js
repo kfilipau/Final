@@ -190,6 +190,62 @@ mouseClicked = function() {
     if (currentScene === 0){
        startbutton.handleMouseClick();}
 };
+var Snake = function(x, y, size, speed){
+    this.x =x;
+    this.y = y;
+    this.size = size;
+    this.tiles = [];
+    this.direction = "R";
+    this.speed = speed;
+    for (var i = 0; i < this.size; i++) {
+    this.tiles.push({
+        x: this.x - i * 10,
+        y: this.y});
+  }
+};
+
+//speed going from 5 to 10 in 5 levels
+Snake.prototype.draw = function() {
+    for (var i = 0; i < this.size; i++){
+        fill(255, 0, 0);
+        rectMode(CENTER);
+        rect(this.tiles[i].x, this.tiles[i].y, this.speed, this.speed);
+    }
+    };
+    
+Snake.prototype.move = function(){
+    if (keyCode === RIGHT && this.direction !== "L") {
+        this.direction = "R";
+    } else if (keyCode === LEFT && this.direction !== "R") {
+        this.direction = "L";
+    } else if (keyCode === UP && this.direction !== "D") {
+        this.direction = "U";
+    } else if (keyCode === DOWN && this.direction !== "U") {
+        this.direction = "D";
+    }
+    
+    
+    for (var i = this.tiles.length-1; i > 0; i--){
+        this.tiles[i].x = this.tiles[i - 1].x;
+    this.tiles[i].y = this.tiles[i - 1].y;
+    }
+    if (this.direction === "R") {
+    this.tiles[0].x += this.speed;
+  } else if (this.direction === "L") {
+    this.tiles[0].x -= this.speed;
+  } else if (this.direction === "U") {
+    this.tiles[0].y -= this.speed;
+  } else if (this.direction === "D") {
+    this.tiles[0].y += this.speed;
+  }
+  
+  if (this.x>=400 || this.x<=0 ||this.y >= 400 || this.y  <= 0){
+    stillPlaying = false;}
+};
+
+var snake = new Snake(100, 10, 5, 5);
+ snake.draw();
+ snake.move();
 
 var drawScene2 = function() {
     background(242, 203, 242);
