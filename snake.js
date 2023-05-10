@@ -355,6 +355,9 @@ var drawScene2 = function() {
     rect(0, 0, 400, 55);
     fill(0, 0, 0);
     text("Apples collected: "+(level1.applesCount-level1.apples.length)+"/"+(level1.applesCount), 100, 20);
+    drawBitmoji1(21, 15, 50);
+    drawNikoleNeckDown(38,-9,24);
+    drawNikoleHead(38, -9,24);
     pauseButton.draw();
     level1.draw();
     level1.checkForCollision();
