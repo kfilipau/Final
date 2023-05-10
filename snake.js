@@ -1,5 +1,5 @@
 var currentScene=0;
-frameRate(25);
+frameRate(25);//Partially responsible for speed
 var stillPlaying=true;
 
 //This is just the code that draws our Bitmojis
