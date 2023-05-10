@@ -1,9 +1,8 @@
 var currentScene=0;
-frameRate(30);
+frameRate(25);
 var stillPlaying=true;
-var score=0;
-var startTime;
 
+//This is just the code that draws our Bitmojis
 var drawBitmoji1 = function(bitmojiX, bitmojiY, bitmojiHeight)
 {
     //Head
@@ -128,25 +127,27 @@ arc(x+bitmojiHeight/100*102,y+bitmojiHeight/100*127,bitmojiHeight/100*30,bitmoji
 };
 
 
-
+//This is the code from the Khan button class, which constructs and creates a button, which switch the starting screen to the game screen
 var Button = function(config) {
     this.x = config.x || 0;
     this.y = config.y || 0;
-    this.width = config.width || 150;
-    this.height = config.height || 50;
-    this.label = config.label || "click";
+    this.width = config.width || 64;
+    this.height = config.height || 42;
+    this.label = config.label || "Click";
     this.onClick = config.onClick || function() {};
 };
 
 Button.prototype.draw = function() {
-    fill(159, 198, 245);
+    fill(0, 234, 255);
+    rectMode(CORNER);
     rect(this.x, this.y, this.width, this.height, 5);
     fill(0, 0, 0);
-    textSize(21);
-    textAlign(CENTER, TOP);
-    text(this.label, this.x+75, this.y+this.height/4);
+    textSize(19);
+    textAlign(LEFT, TOP);
+    text(this.label, this.x+5, this.y+this.height/4);
 };
 
+//Checks if the mouse is inside the button
 Button.prototype.isMouseInside = function() {
     return mouseX > this.x &&
            mouseX < (this.x + this.width) &&
@@ -154,66 +155,144 @@ Button.prototype.isMouseInside = function() {
            mouseY < (this.y + this.height);
 };
 
+//Tells the button what to do if clicked
 Button.prototype.handleMouseClick = function() {
     if (this.isMouseInside()) {
         this.onClick();
     }
 };
 
-var startbutton =new Button({
-    x: 128,
-    y: 324,
+//Creates the start button
+var startButton =new Button({
+    x: 329,
+    y: 10,
     label: "Start!",
-    onClick: function () 
+    onClick: function () //Switches the scene (starting screen)
     {
     currentScene=1;
-    startTime=millis();
     }
     });
+    
+//Pause button, copied from Kiryl's frogger game. Pauses the game
+var pauseButton = new Button({
+    x: 329,
+    y: 10,
+    label: "Pause",
+    onClick: function(){
+        if(stillPlaying === true){
+            stillPlaying = false;
+            startButton.draw();
+        }
+        else if(stillPlaying === false){
+            stillPlaying = true;
+        }
+    }
+});
 
-
-var drawScene1 =function() 
-{
-   
-    background(242, 203, 242);
-    drawBitmoji1(212, 110, 100);
-    textSize(17);
-    textAlign(CENTER);
-    text("Kiryl Filipau, Nikole DeSimone - Memory Game",200,76);
-    text("Instructions:\nTurn over all the matching tiles.\nThe matches come in sets of 4. Good Luck!", 200, 200);
-    startbutton.draw();
-    drawNikoleNeckDown(60,58,56);
-    drawNikoleHead(60,58,56);
-};
-
+//Describes mouse clicks
 mouseClicked = function() {
-    if (currentScene === 0){
-       startbutton.handleMouseClick();}
+    if (currentScene === 1)
+    {
+        pauseButton.handleMouseClick();
+    }
+    else if (currentScene === 0){
+        startButton.handleMouseClick();
+    }
 };
+
+//Creates a new object type Snake
 var Snake = function(x, y, size, speed){
     this.x =x;
     this.y = y;
-    this.size = size;
-    this.tiles = [];
-    this.direction = "R";
-    this.speed = speed;
-    for (var i = 0; i < this.size; i++) {
+    this.size = size; //The size of the snake (the number of tiles it is made of)
+    this.tiles = []; //An array to hold all of the tiles
+    this.direction = "R"; //Responsible for the direction in which the snake is moving
+    this.speed = speed; //The speed of the snake
+    for (var i = 0; i < this.size; i++) { //Each tile is its own object with an x and y coordinate. A new tile is added to the array when the size is increased
     this.tiles.push({
         x: this.x - i * 10,
         y: this.y});
-  }
+    }
 };
 
-//speed going from 5 to 10 in 5 levels
+//Create an instance of the Snake object
+var snake = new Snake(100, 60, 6, 8);
+
+//Creates an Apple-type object
+var Apple = function(x, y){
+    this.x = x;
+    this.y = y;
+};
+
+//Tells the program how to draw every instance of the Apple-type object
+Apple.prototype.draw = function() {
+    fill(48, 31, 84);
+    imageMode(CENTER);
+    image(getImage("avatars/primosaur-seed"), this.x, this.y, 30, 30);
+};
+
+//Creates a Level-type object for different levels
+var Level = function(applesCount){
+    this.apples = [];
+    this.applesCount = applesCount;
+    this.currentApple = 0;
+};
+
+
+//Generates coordinates for all of the apples
+Level.prototype.appleCoordinates = function(){
+    for (var i = 0; i< this.applesCount; i++){//Create new apples at random coordinates on the screen
+        var apple = new Apple (random(10, 390), random(60, 390));
+        this.apples[i] = apple; //Put all the new apples into an array
+    }
+};
+
+//Draws out the first apple in the array
+Level.prototype.draw = function() {
+        this.apples[0].draw();
+};
+
+//Grow the snake whenever it eats an apple
+Snake.prototype.grow = function(){
+    var newTile = {   //Creates a new tile, which we then push to the end of the tiles array to increase the size of the snake
+        x: this.tiles[this.tiles.length - 1].x,
+        y: this.tiles[this.tiles.length - 1].y
+    };
+    this.tiles.push(newTile);
+    this.size++;
+};
+
+//generate the level with 20 obstacles, and decide all of their coordinates
+var level1 = new Level(20);
+level1.appleCoordinates();
+
+//Checks for the snake eating an apple when it gets close to one
+Level.prototype.checkForCollision = function(){
+    if (snake.tiles[0].x < this.apples[0].x+10 && snake.tiles[0].x > this.apples[0].x-10 &&
+        snake.tiles[0].y < this.apples[0].y+10 && snake.tiles[0].y > this.apples[0].y-10){
+            snake.grow();
+            this.apples.splice(0,1);//Remove the apple from both the array and the screen
+    }
+    if (level1.apples.length === 0){ //When we have collected all of the apples specified in the level instance, the game ends
+        currentScene = 2;}
+};
+
+
+//Draws snake tile by tile based on the x and y coordinates of the tiles in the array
 Snake.prototype.draw = function() {
     for (var i = 0; i < this.size; i++){
-        fill(255, 0, 0);
+        if(i === 0){
+            fill(13, 76, 128);}
+        else {fill(102, 199, 28);}
         rectMode(CENTER);
         rect(this.tiles[i].x, this.tiles[i].y, this.speed, this.speed);
     }
-    };
-    
+};
+
+
+//Programs how the snake moves on the screen
 Snake.prototype.move = function(){
+    //The keys responsible for the change in direction of the snake
     if (keyCode === RIGHT && this.direction !== "L") {
         this.direction = "R";
     } else if (keyCode === LEFT && this.direction !== "R") {
@@ -224,11 +303,23 @@ Snake.prototype.move = function(){
         this.direction = "D";
     }
     
-    
+    //Each tile after the first one adopts the coordinates of the one before it in each loop. The "head" tile is moved by the user. The loop runs from the back of the snake, to prevent the snake from collapsing into one tile. This "moves" the snake except for the head tile
     for (var i = this.tiles.length-1; i > 0; i--){
         this.tiles[i].x = this.tiles[i - 1].x;
     this.tiles[i].y = this.tiles[i - 1].y;
     }
+    
+    //When the snake (the head tile) reaches the edge of the screen, it moves to the other side of the screen
+    if (this.tiles[0].x>410){
+        this.tiles[0].x=-10;
+    } else if (this.tiles[0].x < -10){
+        this.tiles[0].x = 410;
+    } else if (this.tiles[0].y > 410){
+        this.tiles[0].y=50;
+    } else if (this.tiles[0].y < 50){
+        this.tiles[0].y = 410;}
+    
+    //How the snake moves based on direction, i.e. if the snake is supposed to move "up", then only the y-coordinate changes
     if (this.direction === "R") {
     this.tiles[0].x += this.speed;
   } else if (this.direction === "L") {
@@ -238,18 +329,52 @@ Snake.prototype.move = function(){
   } else if (this.direction === "D") {
     this.tiles[0].y += this.speed;
   }
-  
-  if (this.x>=400 || this.x<=0 ||this.y >= 400 || this.y  <= 0){
-    stillPlaying = false;}
 };
 
-var snake = new Snake(100, 10, 5, 5);
- snake.draw();
- snake.move();
-
-var drawScene2 = function() {
+//The starting screen. Pretty much the same as in other javascript game assignments
+var drawScene1 =function() {
     background(242, 203, 242);
+    drawBitmoji1(266, 110, 100);
+    textSize(17);
+    textAlign(CENTER);
+    text("Kiryl Filipau, Nikole DeSimone - Snake",200,76);
+    text("Instructions:\nCollect all "+ level1.applesCount+ " apples with the snake.\nUse the navigation keys to move the snake.", 200, 228);
+    startButton.draw();
+    drawNikoleNeckDown(60,58,56);
+    drawNikoleHead(60,58,56);
 };
+
+//All of the stuff above put together to make the game screen
+var drawScene2 = function() {
+    if(stillPlaying){
+    background(61, 177, 255);
+    snake.draw();
+    snake.move();
+    fill(0, 255, 225);
+    rectMode(CORNER);
+    rect(0, 0, 400, 55);
+    fill(0, 0, 0);
+    text("Apples collected: "+(level1.applesCount-level1.apples.length)+"/"+(level1.applesCount), 100, 20);
+    pauseButton.draw();
+    level1.draw();
+    level1.checkForCollision();
+    }
+    else if (stillPlaying === false)
+    {startButton.draw();}
+    
+};
+
+var drawScene3 = function(){
+    background(61, 177, 255);
+    fill(0, 255, 225);
+    rectMode(CORNER);
+    rect(0, 0, 400, 55);
+    textSize(40);
+    textAlign(CENTER);
+    text("You Won!!!",206, 177);
+};
+
+
 
 var draw = function() 
 
@@ -257,6 +382,8 @@ var draw = function()
     if (currentScene === 0){
     drawScene1();}
     else if(currentScene === 1){
-        drawScene2();
-    }
+    drawScene2();
+    } 
+    else if (currentScene === 2){
+    drawScene3();}
 };
